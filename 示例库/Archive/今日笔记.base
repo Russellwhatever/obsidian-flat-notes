@@ -1,0 +1,106 @@
+filters:
+  and:
+    - file.ext == "md"
+formulas:
+  createdDate: created
+  modifiedDate: updated
+  finishedDate: done_date
+  testFormula: if(/^\d{4}-\d{2}-\d{2}/.matches(this.file.name), date(this.file.name), today()).format("YYYYMMDD")
+  Name: if(title, link(file, title), file)
+  Type: |-
+    if(
+    date(if(formula.createdDate, formula.createdDate, file.ctime)).format("YYYYMMDD") == if(/^\d{4}-\d{2}-\d{2}/.matches(this.file.name), date(this.file.name), today()).format("YYYYMMDD"), "🌱 NEW", 
+
+    if(
+    date(if(formula.modifiedDate, formula.modifiedDate, file.mtime)).format("YYYYMMDD") == if(/^\d{4}-\d{2}-\d{2}/.matches(this.file.name), date(this.file.name), today()).format("YYYYMMDD"), "📝 MODIFIED", "OTHERS"
+
+    )
+    )
+
+    + if(file.inFolder("07 WebPages"), " 🗃️ ", "")
+
+    + if(formula.finishedDate, 
+    if (
+    date(formula.finishedDate).format("YYYYMMDD") == if(/^\d{4}-\d{2}-\d{2}/.matches(this.file.name), date(this.file.name), today()).format("YYYYMMDD"), " ✅ DONE", ""
+    ), ""
+    )
+  statusGroup: |+
+    if(
+    date(if(formula.createdDate, formula.createdDate, file.ctime)).format("YYYYMMDD") == if(/^\d{4}-\d{2}-\d{2}/.matches(this.file.name), date(this.file.name), today()).format("YYYYMMDD"), "Today Created", 
+
+    if (
+    date(formula.finishedDate).format("YYYYMMDD") == if(/^\d{4}-\d{2}-\d{2}/.matches(this.file.name), date(this.file.name), today()).format("YYYYMMDD"), "Today Finished",
+
+    if(
+    date(if(formula.modifiedDate, formula.modifiedDate, file.mtime)).format("YYYYMMDD") == if(/^\d{4}-\d{2}-\d{2}/.matches(this.file.name), date(this.file.name), today()).format("YYYYMMDD"), "Today Modified", "OTHERS"
+
+    )
+    )
+    )
+
+views:
+  - type: table
+    name: All of Today
+    filters:
+      and:
+        - and:
+            - '!file.inFolder("03 日记")'
+            - '!file.inFolder("99 Attachment/04 Zotero Notes")'
+        - or:
+            - date(if(formula.modifiedDate, formula.modifiedDate, file.mtime)).format("YYYYMMDD") == if(/^\d{4}-\d{2}-\d{2}/.matches(this.file.name), date(this.file.name), today()).format("YYYYMMDD")
+            - date(if(formula.createdDate, formula.createdDate, file.ctime)).format("YYYYMMDD") == if(/^\d{4}-\d{2}-\d{2}/.matches(this.file.name), date(this.file.name), today()).format("YYYYMMDD")
+            - formula.finishedDate && date(formula.finishedDate).format("YYYYMMDD") == if(/^\d{4}-\d{2}-\d{2}/.matches(this.file.name), date(this.file.name), today()).format("YYYYMMDD")
+    groupBy: formula.statusGroup
+    order:
+      - formula.Name
+      - formula.Type
+      - file.mtime
+    sort:
+      - property: formula.Type
+        direction: ASC
+      - property: file.folder
+        direction: DESC
+      - property: edited_seconds
+        direction: ASC
+    limit: 10
+    columnSize:
+      formula.Name: 371
+  - type: table
+    name: Recently Modified
+    filters:
+      and:
+        - formula.createdDate >= today() - "7 day" || formula.modifiedDate >= today() - "3 day"
+    order:
+      - file.name
+      - file.folder
+      - file.mtime
+    sort:
+      - property: formula.modifiedDate
+        direction: ASC
+    columnSize:
+      file.name: 355
+  - type: table
+    name: Modified Today
+    filters:
+      and:
+        - date(if(formula.modifiedDate, formula.modifiedDate, file.mtime)).format("YYYYMMDD") == if(/^\d{4}-\d{2}-\d{2}/.matches(this.file.name), date(this.file.name), today()).format("YYYYMMDD")
+        - '!file.inFolder("PeriodicNote")'
+        - date(if(formula.createdDate, formula.createdDate, file.ctime)).format("YYYYMMDD") != if(/^\d{4}-\d{2}-\d{2}/.matches(this.file.name), date(this.file.name), today()).format("YYYYMMDD")
+    order:
+      - formula.Name
+      - file.basename
+    columnSize:
+      file.name: 438
+  - type: table
+    name: Created Today
+    filters:
+      and:
+        - date(if(formula.createdDate, formula.createdDate, file.ctime)).format("YYYYMMDD") == if(/^\d{4}-\d{2}-\d{2}/.matches(this.file.name), date(this.file.name), today()).format("YYYYMMDD")
+        - '!file.inFolder("PeriodicNote")'
+    order:
+      - formula.Name
+      - formula.createdDate
+      - formula.modifiedDate
+    columnSize:
+      formula.Name: 575
+      formula.createdDate: 134

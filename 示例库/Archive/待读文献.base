@@ -1,0 +1,13 @@
+views:
+  - type: table
+    name: 表格
+    filters:
+      and:
+        - file.inFolder("Archive/citations")
+        - completed != true
+    order:
+      - file.name
+      - title
+    sort:
+      - property: file.mtime
+        direction: DESC

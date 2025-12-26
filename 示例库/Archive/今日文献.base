@@ -1,0 +1,62 @@
+filters:
+  and:
+    - file.ext == "md"
+formulas:
+  createdDate: created
+  modifiedDate: updated
+  finishedDate: done_date
+  testFormula: if(/^\d{4}-\d{2}-\d{2}/.matches(this.file.name), date(this.file.name), today()).format("YYYYMMDD")
+  Name: if(title, link(file, title), file)
+  Type: |-
+    if(
+    date(if(formula.createdDate, formula.createdDate, file.ctime)).format("YYYYMMDD") == if(/^\d{4}-\d{2}-\d{2}/.matches(this.file.name), date(this.file.name), today()).format("YYYYMMDD"), "🌱 NEW", 
+
+    if(
+    date(if(formula.modifiedDate, formula.modifiedDate, file.mtime)).format("YYYYMMDD") == if(/^\d{4}-\d{2}-\d{2}/.matches(this.file.name), date(this.file.name), today()).format("YYYYMMDD"), "📝 MODIFIED", "OTHERS"
+
+    )
+    )
+
+    + if(file.inFolder("07 WebPages"), " 🗃️ ", "")
+
+    + if(formula.finishedDate, 
+    if (
+    date(formula.finishedDate).format("YYYYMMDD") == if(/^\d{4}-\d{2}-\d{2}/.matches(this.file.name), date(this.file.name), today()).format("YYYYMMDD"), " ✅ DONE", ""
+    ), ""
+    )
+  statusGroup: |+
+    if(
+    date(if(formula.createdDate, formula.createdDate, file.ctime)).format("YYYYMMDD") == if(/^\d{4}-\d{2}-\d{2}/.matches(this.file.name), date(this.file.name), today()).format("YYYYMMDD"), "Today Created", 
+
+    if (
+    date(formula.finishedDate).format("YYYYMMDD") == if(/^\d{4}-\d{2}-\d{2}/.matches(this.file.name), date(this.file.name), today()).format("YYYYMMDD"), "Today Finished",
+
+    if(
+    date(if(formula.modifiedDate, formula.modifiedDate, file.mtime)).format("YYYYMMDD") == if(/^\d{4}-\d{2}-\d{2}/.matches(this.file.name), date(this.file.name), today()).format("YYYYMMDD"), "Today Modified", "OTHERS"
+
+    )
+    )
+    )
+
+views:
+  - type: table
+    name: All of Today
+    filters:
+      and:
+        - and:
+            - file.inFolder("99 Attachment/04 Zotero Notes")
+        - or:
+            - date(if(formula.modifiedDate, formula.modifiedDate, file.mtime)).format("YYYYMMDD") == if(/^\d{4}-\d{2}-\d{2}/.matches(this.file.name), date(this.file.name), today()).format("YYYYMMDD")
+            - date(if(formula.createdDate, formula.createdDate, file.ctime)).format("YYYYMMDD") == if(/^\d{4}-\d{2}-\d{2}/.matches(this.file.name), date(this.file.name), today()).format("YYYYMMDD")
+            - formula.finishedDate && date(formula.finishedDate).format("YYYYMMDD") == if(/^\d{4}-\d{2}-\d{2}/.matches(this.file.name), date(this.file.name), today()).format("YYYYMMDD")
+    groupBy: formula.statusGroup
+    order:
+      - formula.Name
+      - formula.Type
+      - file.folder
+    sort:
+      - property: edited_seconds
+        direction: ASC
+    limit: 10
+    columnSize:
+      formula.Name: 361
