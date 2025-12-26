@@ -1,3 +1,5 @@
+[English](README.md) | [中文](示例库/Archive/示例库说明.md)
+
 # Obsidian Flat Notes
 
 An example Obsidian vault demonstrating how to manage notes without folders,
